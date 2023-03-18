@@ -1,0 +1,32 @@
+name: Cron every week
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+
+  workflow_dispatch:
+    inputs:
+      token:
+        description: 'secret token'
+        required: true
+
+#concurrency: 
+#  group: ${{ github.workflow }}-${{ github.ref }}
+#  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+    - uses: actions/checkout@master
+    
+    - name: docker registry login
+      run: echo "${{  secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}" | docker login ghcr.io --username admicro --password-stdin
+      
+    - name: Run cron
+      if: success()
+      run: |
+        docker run \
+        -e SERVICE="mega" \
+        ghcr.io/admicro/acclogin:latest
